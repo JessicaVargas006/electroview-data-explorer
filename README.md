@@ -18,6 +18,7 @@ That's it. No installation, no server, no dependencies to install.
 ```
 electroview/
 ├── index.html      # Main app (structure + CDN links)
+├── sample-electronics-sales.csv      # sample data
 ├── styles.css      # Modern dark theme styling
 ├── app.js          # All app logic (~780 lines)
 └── README.md       # This file
