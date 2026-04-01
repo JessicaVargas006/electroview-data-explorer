@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ElectroView - Electronics Data Explorer</title>
+    
+    <!-- External CDN Libraries -->
+    <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dayjs@1/dayjs.min.js"></script>
+    
+    <!-- Styles -->
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body class="theme-dark">
+    
+    <!-- Toast Container -->
+    <div id="toast-container"></div>
+    
+    <!-- Hero Header -->
+    <header class="hero">
+        <div class="container">
+            <div class="hero-content">
+                <h1 class="hero-title">⚡ ElectroView</h1>
+                <p class="hero-subtitle">Explore your electronics data: filter, visualize, and export — all in your browser.</p>
+            </div>
+            <div class="hero-actions">
+                <button id="theme-toggle" class="btn-icon" title="Toggle theme">
+                    <span class="theme-icon">🌙</span>
+                </button>
+                <button id="reset-app" class="btn-secondary">🔄 Reset App</button>
+            </div>
+        </div>
+    </header>
+
+    <main class="container">
+        
+        <!-- Source Section -->
+        <section id="source-section" class="card section">
+            <h2 class="section-title">📁 Data Source</h2>
+            
+            <div class="source-options">
+                <!-- Upload CSV -->
+                <div class="source-option">
+                    <label for="csv-upload" class="label">📤 Upload CSV File</label>
+                    <input type="file" id="csv-upload" accept=".csv" class="file-input">
+                </div>
+                
+                <!-- Paste CSV -->
+                <div class="source-option">
+                    <label for="csv-paste" class="label">📋 Paste CSV Data</label>
+                    <textarea id="csv-paste" class="textarea" rows="6" placeholder="Paste your CSV data here..."></textarea>
+                    <button id="use-pasted" class="btn-tertiary">Use Pasted Data</button>
+                </div>
+                
+                <!-- Sample Data -->
+                <div class="source-option">
+                    <button id="load-sample" class="btn-tertiary">📊 Load Sample Electronics Data</button>
+                </div>
+            </div>
+            
+            <button id="load-data" class="btn-primary">
+                <span class="btn-text">Load Data</span>
+                <span class="loader-dots hidden">
+                    <span></span><span></span><span></span>
+                </span>
+            </button>
+        </section>
+
+        <!-- Overview Section (hidden initially) -->
+        <section id="overview-section" class="card section hidden">
+            <h2 class="section-title">📊 Overview</h2>
+            
+            <!-- Summary Chips -->
+            <div class="chips">
+                <div class="chip">
+                    <span class="chip-label">Rows</span>
+                    <span id="chip-rows" class="chip-value">0</span>
+                </div>
+                <div class="chip">
+                    <span class="chip-label">Columns</span>
+                    <span id="chip-columns" class="chip-value">0</span>
+                </div>
+                <div class="chip">
+                    <span class="chip-label">Avg Missing</span>
+                    <span id="chip-missing" class="chip-value">0%</span>
+                </div>
+                <div class="chip">
+                    <span class="chip-label">Size</span>
+                    <span id="chip-size" class="chip-value">0 KB</span>
+                </div>
+            </div>
+
+            <!-- Electronics KPIs (if applicable) -->
+            <div id="kpi-section" class="kpi-grid hidden">
+                <div class="kpi-card">
+                    <div class="kpi-label">Avg Price</div>
+                    <div id="kpi-price" class="kpi-value">$0</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-label">Avg Cost</div>
+                    <div id="kpi-cost" class="kpi-value">$0</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-label">Avg Margin</div>
+                    <div id="kpi-margin" class="kpi-value">0%</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-label">Avg Rating</div>
+                    <div id="kpi-rating" class="kpi-value">0.0</div>
+                </div>
+            </div>
+            
+            <!-- Data Dictionary -->
+            <h3 class="subsection-title">📖 Data Dictionary</h3>
+            <div class="table-wrapper">
+                <table id="dictionary-table" class="table">
+                    <thead>
+                        <tr>
+                            <th>Column</th>
+                            <th>Type</th>
+                            <th>Missing %</th>
+                            <th>Unique</th>
+                            <th>Examples</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Main Content Grid (Filters + Content) -->
+        <div id="main-content" class="main-grid hidden">
+            
+            <!-- Filters Sidebar -->
+            <aside id="filters-sidebar" class="card sidebar">
+                <div class="sidebar-header">
+                    <h2 class="section-title">🔍 Filters</h2>
+                    <button id="reset-filters" class="btn-icon" title="Reset all filters">↺</button>
+                </div>
+                <div id="filters-container" class="filters-container">
+                    <!-- Filters will be generated dynamically -->
+                </div>
+            </aside>
+
+            <!-- Content Area -->
+            <div class="content-area">
+                
+                <!-- Explore Section -->
+                <section id="explore-section" class="card section">
+                    <h2 class="section-title">📈 Explore</h2>
+                    
+                    <!-- Quick Insights Tiles -->
+                    <div id="insights-tiles" class="insights-grid hidden">
+                        <!-- Generated dynamically -->
+                    </div>
+                    
+                    <!-- Chart Controls -->
+                    <div class="chart-controls">
+                        <select id="chart-type" class="select">
+                            <option value="histogram">Histogram</option>
+                            <option value="bar">Bar Chart (Top-K)</option>
+                            <option value="scatter">Scatter Plot</option>
+                            <option value="box">Box Plot</option>
+                            <option value="heatmap">Correlation Heatmap</option>
+                        </select>
+                        
+                        <div id="chart-options" class="chart-options">
+                            <!-- Dynamic controls for selected chart type -->
+                        </div>
+                        
+                        <button id="download-chart" class="btn-tertiary">💾 Download Chart PNG</button>
+                    </div>
+                    
+                    <!-- Chart Canvas -->
+                    <div class="chart-wrapper">
+                        <canvas id="main-chart"></canvas>
+                        <div id="heatmap-canvas" class="hidden"></div>
+                    </div>
+                    
+                    <div id="chart-empty-state" class="empty-state hidden">
+                        <p>⚠️ No suitable columns found for this chart type.</p>
+                    </div>
+                </section>
+
+                <!-- Data Table Section -->
+                <section id="table-section" class="card section">
+                    <h2 class="section-title">📋 Data Table</h2>
+                    
+                    <div class="table-controls">
+                        <input type="text" id="table-search" class="input" placeholder="🔍 Search in table...">
+                        <div class="table-info">
+                            <span id="table-count">Showing 0 rows</span>
+                        </div>
+                        <button id="download-csv" class="btn-tertiary">💾 Download Filtered CSV</button>
+                    </div>
+                    
+                    <div class="table-wrapper">
+                        <table id="data-table" class="table">
+                            <thead id="table-head"></thead>
+                            <tbody id="table-body"></tbody>
+                        </table>
+                    </div>
+                    
+                    <!-- Pagination -->
+                    <div class="pagination">
+                        <button id="prev-page" class="btn-icon" disabled>←</button>
+                        <span id="page-info">Page 1 of 1</span>
+                        <button id="next-page" class="btn-icon" disabled>→</button>
+                    </div>
+                </section>
+                
+            </div>
+        </div>
+
+    </main>
+
+    <!-- App Logic -->
+    <script src="app.js"></script>
+</body>
+</html>
